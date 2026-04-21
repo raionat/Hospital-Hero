@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Hospital Hero — Segurança do Paciente</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&display=swap');
@@ -22,6 +22,12 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; image-rendering: pixelated; }
 
+html, body {
+  width: 100%;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: 'VT323', monospace;
   background: #0d1220;
@@ -32,10 +38,12 @@ body {
   align-items: center;
   justify-content: flex-start;
   min-height: 100vh;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   user-select: none;
   padding: 0;
   margin: 0;
+  -webkit-overflow-scrolling: touch;
 }
 
 #game-container {
@@ -46,11 +54,20 @@ body {
   position: relative;
   overflow-y: auto;
   overflow-x: hidden;
-  border: 8px solid #111825;
-  border-radius: 16px;
-  box-shadow: 0 0 0 6px #FF6B35, 0 0 0 12px #111825, 0 18px 40px rgba(0,0,0,0.7);
   display: flex;
   flex-direction: column;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Bordas decorativas só em telas maiores */
+@media (min-width: 900px) {
+  #game-container {
+    border: 8px solid #111825;
+    border-radius: 16px;
+    box-shadow: 0 0 0 6px #FF6B35, 0 0 0 12px #111825, 0 18px 40px rgba(0,0,0,0.7);
+    min-height: calc(100vh - 32px);
+    margin: 16px auto;
+  }
 }
 
 /* HUD */
@@ -85,13 +102,14 @@ body {
   min-height: calc(100vh - 60px);
   overflow-y: auto;
   overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 .phase.active { display: flex; }
 
 /* PIXEL BUTTON */
 .pixel-btn {
   font-family: 'Press Start 2P', monospace;
-  font-size: 9px;
+  font-size: clamp(8px, 2vw, 9px);
   padding: 10px 18px;
   background: var(--orange);
   color: #fff;
@@ -101,6 +119,8 @@ body {
   box-shadow: var(--pixel-shadow);
   transition: transform 0.1s;
   letter-spacing: 0.5px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .pixel-btn:hover { transform: translate(-2px,-2px); box-shadow: 6px 6px 0px rgba(0,0,0,0.5); }
 .pixel-btn:active { transform: translate(2px,2px); box-shadow: 2px 2px 0px rgba(0,0,0,0.5); }
@@ -117,12 +137,13 @@ body {
   background: var(--dark);
   color: var(--yellow);
   font-family: 'VT323', monospace;
-  font-size: clamp(16px, 3vw, 20px);
+  font-size: clamp(14px, 3vw, 20px);
   padding: 10px 16px;
   border: 3px solid var(--orange);
-  z-index: 200;
+  z-index: 9999;
   text-align: center;
-  max-width: 90%;
+  max-width: min(90%, 500px);
+  width: max-content;
   display: none;
   animation: popIn 0.2s ease;
   word-wrap: break-word;
@@ -131,7 +152,7 @@ body {
 
 /* TITLE SCREEN */
 #title-screen {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: linear-gradient(180deg, #0D47A1 0%, #1565C0 40%, #42A5F5 100%);
   display: flex;
@@ -140,6 +161,7 @@ body {
   justify-content: center;
   gap: 16px;
   z-index: 300;
+  padding: 20px;
 }
 #title-screen h1 {
   font-family: 'Press Start 2P', monospace;
@@ -163,7 +185,7 @@ body {
 #phase1 {
   background: linear-gradient(180deg, #E3F2FD 60%, #BBDEFB 100%);
   padding-top: 10px;
-  padding-bottom: 20px;
+  padding-bottom: 30px;
 }
 .ward-scene {
   width: 100%;
@@ -179,13 +201,30 @@ body {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
-  padding: 16px 0 10px;
-  max-width: 280px;
+  padding: 16px 12px 10px;
+  max-width: 320px;
   margin: 0 auto;
 }
+
+/* Em telas maiores, mostrar 3 colunas */
+@media (min-width: 700px) {
+  .phase1-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 100%;
+    padding: 16px 12px;
+  }
+}
+
+@media (min-width: 500px) and (max-width: 699px) {
+  .phase1-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 100%;
+    padding: 16px 12px;
+  }
+}
+
 .patient-card {
   width: 100%;
-  max-width: 280px;
   background: rgba(255,255,255,0.92);
   border: 4px solid #111825;
   border-radius: 18px;
@@ -205,14 +244,13 @@ body {
 }
 .patient-image {
   width: 100%;
-  max-width: 230px;
   height: auto;
-  max-height: 180px;
-  border-radius: 18px;
+  border-radius: 14px;
   border: 4px solid #111825;
   box-shadow: var(--pixel-shadow);
   background: #ffffff;
   object-fit: cover;
+  display: block;
 }
 .patient-info {
   width: 100%;
@@ -220,50 +258,60 @@ body {
   border: 4px solid #111825;
   border-radius: 14px;
   padding: 10px 8px;
-  font-size: 13px;
+  font-size: clamp(11px, 2.5vw, 13px);
   color: var(--dark);
   line-height: 1.3;
+  cursor: pointer;
+  transition: background 0.2s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
+.patient-info:hover { background: #f5f5f5; }
 .patient-info strong {
   display: block;
   margin-bottom: 6px;
   font-family: 'Press Start 2P', monospace;
+  font-size: clamp(7px, 1.5vw, 9px);
   letter-spacing: 0.5px;
 }
 .wristband {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 5px 10px;
   border-radius: 20px;
-  font-size: 13px;
+  font-size: clamp(11px, 2.5vw, 14px);
   color: #fff;
   cursor: pointer;
   margin-top: 3px;
   border: 2px solid rgba(0,0,0,0.3);
   transition: transform 0.1s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 .wristband:hover { transform: scale(1.05); }
 .wristband.band-blue { background: var(--blue); }
 .wristband.band-green { background: var(--green); }
 .wristband.band-purple { background: #7B1FA2; }
 .info-popup {
-  position: absolute;
-  top: -80px; left: 50%; transform: translateX(-50%);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: var(--dark);
   color: var(--yellow);
-  padding: 6px 10px;
+  padding: 12px 16px;
   border: 2px solid var(--orange);
-  border-radius: 4px;
-  font-size: 13px;
-  white-space: nowrap;
-  z-index: 150;
+  border-radius: 8px;
+  font-size: clamp(12px, 3vw, 16px);
+  z-index: 1000;
   display: none;
-}
-.info-popup::after {
-  content: '';
-  position: absolute;
-  bottom: -8px; left: 50%; transform: translateX(-50%);
-  border: 4px solid transparent;
-  border-top-color: var(--orange);
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.8);
 }
 .draggable-plate {
   cursor: grab;
@@ -272,15 +320,15 @@ body {
 .draggable-plate:active { cursor: grabbing; }
 .drop-target.drag-over { outline: 3px dashed var(--orange); background: #FFF9C4 !important; }
 #p1-instruction {
-  font-size: clamp(13px, 2.5vw, 16px);
+  font-size: clamp(12px, 2.8vw, 15px);
   color: var(--dark);
   text-align: center;
-  padding: 8px 10px;
+  padding: 8px 12px;
   background: rgba(255,255,255,0.92);
   border: 3px solid var(--dark);
   border-radius: 10px;
-  margin: 12px 8px 8px;
-  max-width: min(95%, 700px);
+  margin: 12px 12px 8px;
+  width: calc(100% - 24px);
   box-shadow: var(--pixel-shadow);
   line-height: 1.4;
 }
@@ -318,7 +366,7 @@ body {
 .nurse-char:active { cursor: grabbing; }
 .nurse-char.dragging { z-index: 50; opacity: 0.8; }
 .char-sprite { font-size: clamp(24px, 5vw, 36px); }
-.char-name { font-size: 12px; color: var(--dark); background: rgba(255,255,255,0.8); padding: 2px 4px; border-radius: 3px; }
+.char-name { font-size: clamp(10px, 2vw, 12px); color: var(--dark); background: rgba(255,255,255,0.8); padding: 2px 4px; border-radius: 3px; }
 .speech-bubble {
   position: absolute;
   bottom: 100%; left: 50%; transform: translateX(-50%);
@@ -326,10 +374,12 @@ body {
   border: 3px solid var(--dark);
   border-radius: 8px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: clamp(10px, 2vw, 12px);
   white-space: nowrap;
   cursor: pointer;
   z-index: 20;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .speech-bubble::after {
   content: '';
@@ -349,10 +399,10 @@ body {
 }
 #main-char .char-sprite { font-size: clamp(32px, 8vw, 48px); }
 #p2-step {
-  font-size: 16px;
+  font-size: clamp(13px, 3vw, 16px);
   color: var(--dark);
   text-align: center;
-  padding: 6px 10px;
+  padding: 8px 12px;
   background: rgba(255,255,255,0.85);
   border-bottom: 3px solid var(--dark);
   width: 100%;
@@ -362,7 +412,7 @@ body {
 /* ======================= PHASE 3 ======================= */
 #phase3 {
   background: linear-gradient(180deg, #E8F5E9 60%, #C8E6C9 100%);
-  padding-bottom: 20px;
+  padding-bottom: 30px;
 }
 #phase3-scene {
   width: 100%;
@@ -371,21 +421,22 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-around;
-  padding: 8px;
-  gap: 8px;
+  justify-content: flex-start;
+  padding: 12px;
+  gap: 16px;
 }
 .prescription-card {
   background: #fff;
   border: 3px solid var(--dark);
   border-radius: 6px;
   padding: 10px 20px;
-  font-size: 16px;
+  font-size: clamp(14px, 3vw, 16px);
   box-shadow: var(--pixel-shadow);
   text-align: center;
   max-width: 95%;
+  width: 100%;
 }
-.prescription-card strong { color: var(--orange); font-size: 18px; }
+.prescription-card strong { color: var(--orange); font-size: clamp(15px, 3.5vw, 18px); }
 .ampoules-row {
   display: flex;
   gap: 24px;
@@ -402,40 +453,45 @@ body {
   cursor: pointer;
   transition: transform 0.2s;
   position: relative;
+  min-width: 100px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .ampoule:hover { transform: translateY(-4px); }
 .ampoule .amp-label {
-  font-size: 14px;
+  font-size: clamp(12px, 2.5vw, 14px);
   background: #fff;
   border: 2px solid var(--dark);
   padding: 3px 8px;
   border-radius: 3px;
   opacity: 0;
   transition: opacity 0.3s;
+  text-align: center;
 }
 .ampoule.revealed .amp-label { opacity: 1; }
 .ampoule.draggable-amp { cursor: grab; }
 .ampoule.draggable-amp:active { cursor: grabbing; }
 .amp-svg { font-size: clamp(36px, 8vw, 44px); }
 .patient-target {
-  width: 80px; height: 80px;
+  width: clamp(64px, 15vw, 80px);
+  height: clamp(64px, 15vw, 80px);
   border: 3px dashed var(--orange);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 40px;
+  font-size: clamp(28px, 7vw, 40px);
   background: rgba(255,255,255,0.5);
   transition: background 0.2s;
 }
 .patient-target.drag-over { background: #C8E6C9; }
 #p3-row1 { display: flex; align-items: center; gap: 20px; width: 100%; justify-content: center; flex-wrap: wrap; }
-#p3-instruction { font-size: 16px; color: var(--dark); text-align: center; max-width: 95%; }
+#p3-instruction { font-size: clamp(13px, 3vw, 16px); color: var(--dark); text-align: center; max-width: 95%; }
 
 /* ======================= PHASE 4 ======================= */
 #phase4 {
   background: linear-gradient(180deg, #ECEFF1 60%, #CFD8DC 100%);
-  padding-bottom: 20px;
+  padding-bottom: 30px;
 }
 #phase4-scene {
   width: 100%;
@@ -445,7 +501,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 8px;
+  padding: 12px;
   gap: 16px;
   overflow-y: auto;
 }
@@ -456,18 +512,15 @@ body {
   gap: 16px;
   flex-wrap: wrap;
   width: 100%;
-  padding: 0 8px;
 }
 .phase4-image {
-  flex: 1 1 auto;
-  min-width: 280px;
+  flex: 1 1 260px;
   max-width: 100%;
   display: flex;
   justify-content: center;
 }
 .phase4-controls {
-  flex: 1 1 auto;
-  min-width: 260px;
+  flex: 1 1 260px;
   max-width: 100%;
   display: flex;
   flex-direction: column;
@@ -488,6 +541,7 @@ body {
   border: 3px solid #37474F;
   box-shadow: var(--pixel-shadow);
   background: #ffffff;
+  display: block;
 }
 .phase4-card {
   width: 100%;
@@ -497,20 +551,22 @@ body {
   padding: 12px 14px;
   box-shadow: var(--pixel-shadow);
   text-align: left;
-  font-size: 14px;
+  font-size: clamp(13px, 3vw, 14px);
 }
-.phase4-card.small { min-height: 100px; display:flex; flex-direction:column; justify-content:center; }
+.phase4-card.small { min-height: 80px; display:flex; flex-direction:column; justify-content:center; }
 .clipboard {
   background: #fff8e1;
   border: 3px solid #795548;
   border-radius: 4px;
-  padding: 10px 14px;
-  font-size: 14px;
+  padding: 12px 14px;
+  font-size: clamp(13px, 3vw, 14px);
   cursor: pointer;
   box-shadow: var(--pixel-shadow);
   transition: background 0.2s;
   text-align: center;
   width: 100%;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .clipboard:hover { background: #FFF9C4; }
 .clipboard.checked { border-color: var(--green); background: #E8F5E9; }
@@ -520,19 +576,21 @@ body {
   border: 3px solid var(--dark);
   border-radius: 20px;
   padding: 12px 14px;
-  font-size: 14px;
+  font-size: clamp(13px, 3vw, 14px);
   cursor: pointer;
   transition: background 0.2s;
   text-align: center;
   width: 100%;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 .wristband-check:hover { background: var(--light-blue); }
 .wristband-check.checked { background: var(--green); }
-#p4-instruction { font-size: 15px; color: var(--dark); text-align: center; padding: 6px 8px; max-width: 95%; }
+#p4-instruction { font-size: clamp(13px, 3vw, 15px); color: var(--dark); text-align: center; padding: 6px 8px; max-width: 95%; }
 .divergence-msg {
   background: var(--red);
   color: #fff;
-  font-size: 16px;
+  font-size: clamp(14px, 3vw, 16px);
   padding: 6px 12px;
   border-radius: 4px;
   display: none;
@@ -544,7 +602,7 @@ body {
 #phase5 {
   background: linear-gradient(180deg, #E3F2FD 0%, #BBDEFB 100%);
   justify-content: flex-start;
-  padding-bottom: 20px;
+  padding-bottom: 30px;
 }
 #phase5-content {
   width: 100%;
@@ -553,52 +611,52 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 12px 8px;
-  gap: 8px;
+  padding: 12px;
+  gap: 12px;
   overflow-y: auto;
 }
 .hand-wash-title {
   font-family: 'Press Start 2P', monospace;
-  font-size: 8px;
+  font-size: clamp(7px, 2vw, 8px);
   color: var(--orange);
   text-align: center;
   margin: 6px 0;
 }
 .moments-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
   width: 100%;
   max-width: 700px;
-  padding: 0 8px;
+  padding: 0 4px;
 }
 .moment-card {
   background: #fff;
   border: 3px solid var(--dark);
   border-radius: 6px;
-  padding: 8px;
+  padding: 10px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   box-shadow: var(--pixel-shadow);
   transition: transform 0.2s;
 }
 .moment-card:hover { transform: translateY(-3px); }
 .moment-num {
   font-family: 'Press Start 2P', monospace;
-  font-size: 13px;
+  font-size: clamp(11px, 2.5vw, 13px);
   color: var(--orange);
 }
-.moment-icon { font-size: clamp(28px, 6vw, 32px); }
-.moment-text { font-size: 13px; color: var(--dark); text-align: center; line-height: 1.3; }
-.wash-char { font-size: clamp(40px, 10vw, 50px); animation: washAnim 1s infinite alternate; margin: 8px 0; }
+.moment-icon { font-size: clamp(26px, 6vw, 32px); }
+.moment-text { font-size: clamp(12px, 2.5vw, 13px); color: var(--dark); text-align: center; line-height: 1.3; }
+.wash-char { font-size: clamp(36px, 10vw, 50px); animation: washAnim 1s infinite alternate; margin: 8px 0; }
 @keyframes washAnim { from{transform:rotate(-5deg)} to{transform:rotate(5deg)} }
 
 /* ======================= PHASE 6 ======================= */
 #phase6 {
   background: linear-gradient(180deg, #FFF3E0 60%, #FFE0B2 100%);
-  padding-bottom: 20px;
+  padding-bottom: 30px;
 }
 #phase6-scene {
   width: 100%;
@@ -608,8 +666,8 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  padding: 8px;
-  gap: 12px;
+  padding: 12px;
+  gap: 14px;
   overflow-y: auto;
 }
 
@@ -626,18 +684,33 @@ body {
 .p6-rail.left { left: 12px; }
 .p6-rail.right { right: 12px; }
 .p6-rail.up { top: -16px; }
-#p6-instruction { font-size: 15px; color: var(--dark); text-align: center; padding: 6px 8px; background: rgba(255,255,255,0.75); border-radius: 12px; max-width: 95%; }
-.p6-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 12px; padding: 0 8px; }
-.phase6-action { font-family: 'Press Start 2P', monospace; font-size: 11px; padding: 10px 14px; border: none; border-radius: 12px; cursor: pointer; box-shadow: var(--pixel-shadow); background: var(--blue); color: #fff; transition: transform 0.1s; }
+#p6-instruction { font-size: clamp(13px, 3vw, 15px); color: var(--dark); text-align: center; padding: 8px 12px; background: rgba(255,255,255,0.75); border-radius: 12px; max-width: 95%; }
+.p6-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 8px; padding: 0 8px; }
+.phase6-action {
+  font-family: 'Press Start 2P', monospace;
+  font-size: clamp(9px, 2vw, 11px);
+  padding: 12px 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: var(--pixel-shadow);
+  background: var(--blue);
+  color: #fff;
+  transition: transform 0.1s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
+  line-height: 1.4;
+}
 .phase6-action:hover { transform: translate(-2px,-2px); }
 .phase6-action.green { background: var(--green); }
-.task-list { display: flex; flex-direction: column; gap: 6px; align-items: center; padding: 0 8px; }
-.task-item { font-size: 13px; color: #666; }
+.task-list { display: flex; flex-direction: column; gap: 8px; align-items: center; padding: 0 8px; width: 100%; max-width: 400px; }
+.task-item { font-size: clamp(13px, 3vw, 15px); color: #666; text-align: center; }
 .task-item.done { color: var(--green); text-decoration: line-through; }
 
 /* WIN SCREEN */
 #win-screen {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: linear-gradient(135deg, #1A237E, #311B92, #4A148C);
   display: none;
@@ -645,18 +718,19 @@ body {
   align-items: center;
   justify-content: center;
   gap: 14px;
-  z-index: 400;
-  padding: 16px;
+  z-index: 9000;
+  padding: 20px;
+  overflow-y: auto;
 }
 #win-screen h2 { font-family: 'Press Start 2P', monospace; font-size: clamp(9px, 4vw, 16px); color: var(--yellow); text-align: center; line-height: 1.8; text-shadow: 3px 3px 0 #000; }
-#win-screen p { font-size: clamp(16px, 3vw, 22px); color: #fff; text-align: center; max-width: 90%; }
+#win-screen p { font-size: clamp(14px, 3vw, 22px); color: #fff; text-align: center; max-width: 90%; }
 .star-row { font-size: clamp(28px, 8vw, 40px); animation: starSpin 2s linear infinite; }
 @keyframes starSpin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
-.confetti { position: absolute; width: 100%; height: 100%; pointer-events: none; overflow: hidden; top: 0; left: 0; }
+.confetti { position: fixed; width: 100%; height: 100%; pointer-events: none; overflow: hidden; top: 0; left: 0; z-index: -1; }
 
 /* TRANSITION OVERLAY */
 #phase-transition {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: var(--dark);
   display: none;
@@ -672,14 +746,14 @@ body {
 .loading-fill { height: 100%; background: var(--orange); width: 0%; transition: width 1.5s ease; }
 
 #phase-end {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.82);
   display: none;
   align-items: center;
   justify-content: center;
   padding: 16px;
-  z-index: 550;
+  z-index: 8000;
 }
 #phase-end .end-card {
   width: min(95%, 700px);
@@ -692,221 +766,114 @@ body {
   align-items: center;
   gap: 16px;
   box-shadow: var(--pixel-shadow);
-  max-height: 80vh;
+  max-height: 85vh;
   overflow-y: auto;
 }
 #phase-end h3 {
   font-family: 'Press Start 2P', monospace;
   color: var(--yellow);
-  font-size: clamp(11px, 3vw, 20px);
-  text-align: center;
-  line-height: 1.4;
-}
-#phase-end p {
-  font-size: clamp(13px, 2vw, 16px);
-  color: #fff;
+  font-size: clamp(10px, 3vw, 18px);
   text-align: center;
   line-height: 1.5;
+}
+#phase-end p {
+  font-size: clamp(14px, 2.5vw, 16px);
+  color: #fff;
+  text-align: center;
+  line-height: 1.6;
   max-width: 100%;
 }
 #phase-end button {
   font-family: 'Press Start 2P', monospace;
-  font-size: clamp(10px, 2vw, 14px);
-  padding: 10px 18px;
+  font-size: clamp(9px, 2vw, 13px);
+  padding: 12px 20px;
   background: var(--green);
   color: #111;
   border: none;
   cursor: pointer;
   border-radius: 10px;
   box-shadow: var(--pixel-shadow);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
 }
 #phase-end button:hover { transform: translate(-2px,-2px); }
 
 /* PIXEL FLOOR */
 .pixel-floor {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
+  width: 100%;
   height: 20px;
   background: repeating-linear-gradient(90deg, #90A4AE 0px, #90A4AE 20px, #78909C 20px, #78909C 40px);
   border-top: 3px solid #546E7A;
+  flex-shrink: 0;
+  margin-top: auto;
 }
 .pixel-wall {
-  position: absolute;
-  top: 0; left: 0; right: 0;
+  width: 100%;
   height: 30px;
   background: repeating-linear-gradient(90deg, #B0BEC5 0px, #B0BEC5 30px, #90A4AE 30px, #90A4AE 60px);
   border-bottom: 3px solid #78909C;
+  flex-shrink: 0;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .phase1-grid {
-    grid-template-columns: 1fr;
-    max-width: 100%;
-    gap: 12px;
-    padding: 10px 8px;
+/* Touch-friendly tap targets for mobile */
+@media (hover: none) and (pointer: coarse) {
+  .wristband, .clipboard, .wristband-check, .phase6-action, .pixel-btn, #phase-end button {
+    min-height: 48px;
   }
-  .patient-card {
-    max-width: 100%;
-  }
-  .patient-image {
-    max-width: 100%;
-    width: 100%;
-  }
-  .moments-grid { grid-template-columns: repeat(2, 1fr); }
-  .ampoules-row { gap: 14px; flex-wrap: wrap; }
-  .ward-scene { gap: 4px; }
-  .bed-plate { min-width: 90px; font-size: 12px; }
-  .phase4-layout {
-    flex-direction: column;
-    gap: 16px;
-  }
-  .phase4-image {
-    flex: 1 1 100%;
-  }
-  .phase4-controls {
-    flex: 1 1 100%;
-  }
-}
-
-@media (max-width: 600px) {
-  #hud {
-    flex-wrap: wrap;
-    height: auto;
-    gap: 8px;
-    padding: 8px;
-  }
-  #hud .title { font-size: 6px; }
-  #phase-indicator { font-size: 6px; }
-  #score-display { font-size: 6px; }
-  
-  .phase1-grid {
-    grid-template-columns: 1fr;
-    max-width: 100%;
-    padding: 8px;
-  }
-  .patient-card {
-    max-width: 100%;
-    padding: 10px 8px;
-  }
-  .patient-image {
-    max-width: 100%;
-    height: auto;
-  }
-  .patient-info {
-    font-size: 12px;
-    padding: 8px 6px;
-  }
-  .wristband {
-    font-size: 12px;
-    padding: 3px 6px;
-  }
-  
-  #p1-instruction {
+  .speech-bubble {
+    padding: 10px 14px;
     font-size: 14px;
-    padding: 8px;
-    margin: 8px 4px;
   }
-  #p1-tip {
-    padding: 8px !important;
-  }
-  #p1-tip > div {
-    font-size: 12px !important;
-  }
-  
-  .moments-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
+  .ampoule {
+    min-width: 120px;
     padding: 8px;
   }
   .moment-card {
-    padding: 6px;
+    padding: 12px 8px;
   }
-  .moment-icon { font-size: 28px; }
-  
+}
+
+/* Medium screens */
+@media (max-width: 700px) {
+  .moments-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small screens */
+@media (max-width: 450px) {
+  #hud {
+    padding: 6px 8px;
+    gap: 4px;
+  }
+  .phase1-grid {
+    padding: 10px 8px;
+    max-width: 100%;
+  }
+  .patient-info {
+    padding: 8px 6px;
+  }
+  .moments-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
   .ampoules-row {
-    flex-direction: column;
-    gap: 12px;
-    width: 100%;
+    gap: 14px;
   }
-  .ampoule {
-    width: 100%;
-  }
-  
-  .phase4-layout {
-    flex-direction: column;
-  }
-  
   .p6-actions {
     gap: 8px;
   }
-  .phase6-action {
-    font-size: 10px;
-    padding: 10px 12px;
-  }
-  
-  .pixel-wall {
-    height: 20px;
-  }
-  .pixel-floor {
-    height: 16px;
-  }
 }
 
-@media (max-width: 400px) {
-  #phase-end .end-card {
-    padding: 16px;
-    width: min(98%, 400px);
-  }
-  #phase-end h3 {
-    font-size: 12px;
-  }
-  #phase-end p {
-    font-size: 14px;
-  }
-  .patient-info {
-    font-size: 11px;
-  }
-  .moment-num {
-    font-size: 12px;
-  }
-}
-
+/* Very small screens */
 @media (max-width: 350px) {
-  body {
-    padding: 0;
+  .moments-grid {
+    grid-template-columns: 1fr;
   }
-  #game-container {
-    border: 4px solid #111825;
-    border-radius: 8px;
-    box-shadow: 0 0 0 2px #FF6B35, 0 0 0 4px #111825;
-  }
-  .phase1-grid {
-    gap: 8px;
-  }
-  .patient-card {
-    padding: 8px 6px;
-  }
-  .patient-image {
-    max-height: 120px;
-  }
-  .patient-info {
-    font-size: 10px;
-    padding: 6px 4px;
-  }
-  .wristband {
-    font-size: 10px;
-    padding: 2px 4px;
-  }
-  #p1-instruction {
-    font-size: 11px;
-    margin: 6px 4px;
-  }
-  .pixel-wall {
-    height: 15px;
-  }
-  .pixel-floor {
-    height: 12px;
+  .phase6-action {
+    font-size: 8px;
+    padding: 10px 12px;
   }
 }
 </style>
@@ -957,7 +924,7 @@ body {
 
         <!-- BED A -->
         <div class="patient-card" id="bed-a">
-          <div class="bed-label" style="font-size:14px;color:var(--dark);font-weight:bold;">LEITO A</div>
+          <div class="bed-label" style="font-size:clamp(12px,3vw,14px);color:var(--dark);font-weight:bold;">LEITO A</div>
           <img class="patient-image" src="assents/fase 1 - Leito A.png" alt="Paciente do Leito A" />
           <div class="patient-info drop-target" id="plate-a" data-patient="a"
             onclick="selectPlate('a')"
@@ -974,7 +941,7 @@ body {
 
         <!-- BED B -->
         <div class="patient-card" id="bed-b">
-          <div class="bed-label" style="font-size:14px;color:var(--dark);font-weight:bold;">LEITO B</div>
+          <div class="bed-label" style="font-size:clamp(12px,3vw,14px);color:var(--dark);font-weight:bold;">LEITO B</div>
           <img class="patient-image" src="assents/fase 1 - Leito B.png" alt="Paciente do Leito B" />
           <div class="patient-info drop-target" id="plate-b" data-patient="b"
             onclick="selectPlate('b')"
@@ -991,7 +958,7 @@ body {
 
         <!-- BED C -->
         <div class="patient-card" id="bed-c">
-          <div class="bed-label" style="font-size:14px;color:var(--dark);font-weight:bold;">LEITO C</div>
+          <div class="bed-label" style="font-size:clamp(12px,3vw,14px);color:var(--dark);font-weight:bold;">LEITO C</div>
           <img class="patient-image" src="assents/fase 1 - Leito C.png" alt="Paciente do Leito C" />
           <div class="patient-info drop-target" id="plate-c" data-patient="c"
             onclick="selectPlate('c')"
@@ -1007,8 +974,8 @@ body {
         </div>
       </div>
     </div>
-    <div id="p1-tip" style="display:flex;gap:8px;padding:10px;flex-wrap:wrap;justify-content:center;">
-      <div style="font-size:14px;background:rgba(255,255,255,0.94);padding:10px 14px;border:3px solid var(--dark);border-radius:12px;box-shadow:var(--pixel-shadow);">💡 Clique em todas as pulseiras antes de arrastar as placas.</div>
+    <div id="p1-tip" style="display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap;justify-content:center;width:100%;">
+      <div style="font-size:clamp(12px,2.5vw,14px);background:rgba(255,255,255,0.94);padding:10px 14px;border:3px solid var(--dark);border-radius:12px;box-shadow:var(--pixel-shadow);text-align:center;max-width:400px;">💡 Clique em todas as pulseiras antes de arrastar as placas.</div>
     </div>
     <div class="pixel-floor"></div>
   </div>
@@ -1085,14 +1052,14 @@ body {
           </div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:16px;">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;">
         <div class="patient-target" id="patient-target-p3"
           ondragover="event.preventDefault();this.classList.add('drag-over')"
           ondragleave="this.classList.remove('drag-over')"
           ondrop="dropAmp(event)">
           🛌
         </div>
-        <div style="font-size:14px;color:var(--dark);">← Arraste a ampola correta aqui</div>
+        <div style="font-size:clamp(12px,3vw,14px);color:var(--dark);text-align:center;">← Arraste a ampola correta aqui</div>
       </div>
     </div>
     <div class="pixel-floor" style="background:repeating-linear-gradient(90deg,#A5D6A7 0,#A5D6A7 20px,#81C784 20px,#81C784 40px);border-top-color:#66BB6A;"></div>
@@ -1107,7 +1074,7 @@ body {
         <div class="phase4-image">
           <div class="surgery-table">
             <img class="phase4-art" src="assents/fase 4.png" alt="Imagem da fase 4" />
-            <div style="font-size:13px;color:#546E7A;text-align:center;">Imagem cirúrgica</div>
+            <div style="font-size:clamp(11px,2.5vw,13px);color:#546E7A;text-align:center;">Imagem cirúrgica</div>
           </div>
         </div>
         <div class="phase4-controls">
@@ -1164,7 +1131,7 @@ body {
           <div class="moment-text">Após contato com as áreas próximas ao paciente</div>
         </div>
       </div>
-      <div style="font-size:14px;color:#555;text-align:center;padding:6px;background:rgba(255,255,255,0.7);border-radius:4px;max-width:400px;">
+      <div style="font-size:clamp(12px,3vw,14px);color:#555;text-align:center;padding:8px 12px;background:rgba(255,255,255,0.7);border-radius:4px;max-width:400px;width:100%;">
         A higienização das mãos é a medida mais eficaz para prevenir infecções hospitalares!
       </div>
       <button class="pixel-btn green" onclick="goToPhase(6)">▶ IR PARA FASE 6</button>
@@ -1178,7 +1145,6 @@ body {
       <div id="p6-instruction">⚠️ No cuidado com o paciente, conclua as ações abaixo para prevenir quedas e lesões por pressão.</div>
       <div class="p6-bed">
         <div class="p6-bed-base">
-          <!-- FIX: Added id attributes to the rail elements -->
           <div class="p6-rail left" id="p6-rail-left"></div>
           <div class="p6-rail right" id="p6-rail-right"></div>
           <div class="p6-patient initial" id="p6-patient">
@@ -1204,7 +1170,7 @@ body {
     <div class="star-row">⭐⭐⭐</div>
     <h2>🏆 PARABÉNS!<br>VOCÊ COMPLETOU<br>TODOS OS PROTOCOLOS!</h2>
     <p>Você dominou os 6 pilares da segurança do paciente e está pronto para proteger vidas! 💊🩺</p>
-    <div style="font-size:16px;color:var(--yellow);text-align:center;">
+    <div style="font-size:clamp(13px,3vw,16px);color:var(--yellow);text-align:center;line-height:2;">
       ✅ Identificação correta<br>
       ✅ Comunicação efetiva<br>
       ✅ Segurança na medicação<br>
@@ -1233,9 +1199,17 @@ let selectedPlateId = null;
 let draggingNurse = null;
 let draggingAmp = null;
 
-// Phase 2 counters — declared at module scope so they reset properly
 let nursesArrived = 0;
 let bubblesClicked = 0;
+
+// Close popup on outside click
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.info-popup') &&
+      !e.target.closest('.wristband') &&
+      !e.target.closest('.patient-info')) {
+    document.querySelectorAll('.info-popup').forEach(p => p.style.display = 'none');
+  }
+});
 
 function showFeedback(msg, duration=2500, color='var(--yellow)') {
   const fb = document.getElementById('feedback');
@@ -1267,7 +1241,6 @@ function restartGame() {
   phase6State = { decubitoTurned:false, gradeRaised:false };
   document.getElementById('win-screen').style.display = 'none';
 
-  // Reset plates
   const pa = document.getElementById('plate-a');
   const pb = document.getElementById('plate-b');
   if (pa) {
@@ -1281,12 +1254,9 @@ function restartGame() {
     pb.innerHTML = '<strong>João da Silva</strong>25/07/1958';
   }
   
-  // Reset bed selection
   document.querySelectorAll('.patient-card').forEach(card => card.classList.remove('selected'));
-  
   selectedPlateId = null;
 
-  // Reset phase 4
   document.getElementById('clipboard-p4').classList.remove('checked');
   document.getElementById('wristband-p4').classList.remove('checked');
   document.getElementById('clipboard-status').textContent = 'Clique para verificar';
@@ -1296,12 +1266,8 @@ function restartGame() {
   document.getElementById('divergence-msg').style.display = 'none';
   document.getElementById('p4-choice-box').style.display = 'none';
 
-  // Reset phase 6
   const p6 = document.getElementById('p6-patient');
-  if(p6) {
-    p6.classList.remove('lateral','safe');
-    p6.classList.add('initial');
-  }
+  if(p6) { p6.classList.remove('lateral','safe'); p6.classList.add('initial'); }
   const p6Image = document.getElementById('p6-image');
   if(p6Image) p6Image.src = 'assents/Fase 6 - antes dos botoes serem apertados.png';
   const railL = document.getElementById('p6-rail-left');
@@ -1313,7 +1279,6 @@ function restartGame() {
   document.getElementById('task-decubito').textContent = '⬜ Mudar decúbito do paciente';
   document.getElementById('task-grade').textContent = '⬜ Levantar grade do leito';
 
-  // Reset phase 3
   ['amp-dipirona','amp-furosemida'].forEach(id=>{
     const el = document.getElementById(id);
     if(el) {
@@ -1329,7 +1294,6 @@ function restartGame() {
   const pt3 = document.getElementById('patient-target-p3');
   if(pt3) { pt3.innerHTML = '🛌'; pt3.style.background = ''; }
 
-  // Reset nurses
   ['nurse1','nurse2','nurse3','nurse4','nurse5'].forEach((id,i)=>{
     const el = document.getElementById(id);
     if(el) {
@@ -1348,7 +1312,6 @@ function goToPhase(n) {
   document.querySelectorAll('.phase').forEach(p=>p.classList.remove('active'));
   document.getElementById('feedback').style.display = 'none';
   
-  // Limpar seleção de leito ao sair da fase 1
   if(currentPhase === 1) {
     document.querySelectorAll('.patient-card').forEach(card => card.classList.remove('selected'));
   }
@@ -1359,7 +1322,13 @@ function goToPhase(n) {
   if(n === 7) { showWin(); return; }
 
   const phaseEl = document.getElementById('phase'+n);
-  if(phaseEl) phaseEl.classList.add('active');
+  if(phaseEl) {
+    phaseEl.classList.add('active');
+    // Scroll to top of game container when changing phases
+    const gc = document.getElementById('game-container');
+    if(gc) gc.scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
 }
 
 function showPhaseEnd(title, msg, nextPhase, restartPhase = false) {
@@ -1368,7 +1337,6 @@ function showPhaseEnd(title, msg, nextPhase, restartPhase = false) {
   document.getElementById('pe-message').textContent = msg;
   const nextButton = document.getElementById('pe-next');
   nextButton.textContent = restartPhase ? '🔄 REINICIAR FASE' : '▶ PRÓXIMO';
-  // Use a fresh onclick to avoid stale closures
   nextButton.onclick = function() { closePhaseEnd(nextPhase, restartPhase); };
   overlay.style.display = 'flex';
 }
@@ -1422,7 +1390,6 @@ function selectPlate(bed) {
   addScore(5);
   checkP1Progress();
 
-  // Marcar o leito com borda verde
   if (bedCard) {
     document.querySelectorAll('.patient-card').forEach(card => card.classList.remove('selected'));
     bedCard.classList.add('selected');
@@ -1687,7 +1654,6 @@ function turnPatient() {
 function raiseBedRail() {
   if(phase6State.gradeRaised) return;
   phase6State.gradeRaised = true;
-  // FIX: use getElementById with the correct ids now present in HTML
   const railL = document.getElementById('p6-rail-left');
   const railR = document.getElementById('p6-rail-right');
   if(railL) railL.classList.add('up');
@@ -1742,7 +1708,7 @@ function spawnConfetti() {
     container.appendChild(div);
   }
   const style = document.createElement('style');
-  style.textContent = `@keyframes fall { from{transform:translateY(0) rotate(0deg); opacity:1} to{transform:translateY(620px) rotate(720deg); opacity:0} }`;
+  style.textContent = `@keyframes fall { from{transform:translateY(0) rotate(0deg); opacity:1} to{transform:translateY(100vh) rotate(720deg); opacity:0} }`;
   document.head.appendChild(style);
 }
 </script>
